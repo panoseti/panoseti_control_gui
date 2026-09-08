@@ -37,6 +37,11 @@ def resolve_log_file_path() -> Path | None:
 def write_console_log_line(text: str) -> None:
     """Append *text* (as shown in the console pane) to PSETI_GUI_LOG_FILE.
 
+    No timestamp is added here -- most console-pane lines already carry
+    their own (Rich's default local-time prefix on log records; `pseti`'s
+    CLI output is similarly self-timestamped where it matters), so *text*
+    is written as-is, just stripped of ANSI codes.
+
     No-op if the env var isn't set. Best-effort: a write failure (e.g. an
     unwritable or missing parent on a remote mount) is swallowed so it can
     never break the console pane itself.
@@ -47,10 +52,9 @@ def write_console_log_line(text: str) -> None:
     text = _strip_ansi(text).rstrip("\n")
     if not text:
         return
-    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "a", encoding="utf-8") as f:
-            f.write(f"{ts}: {text}\n")
+            f.write(f"{text}\n")
     except OSError:
         pass
