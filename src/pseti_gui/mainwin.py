@@ -16,6 +16,7 @@ from pseti_gui.grpc_config import load_grpc_config
 from pseti_gui.square_grid import SquareGridContainer
 from pseti_gui.terminal_launcher import open_terminal_with_command
 from pseti_gui.ansi_html import AnsiToHtml
+from pseti_gui.gui_log_file import write_console_log_line
 import asyncio, signal
 from multiprocessing import shared_memory, resource_tracker
 
@@ -194,6 +195,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
             self.append_log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
 
     def append_log(self, text):
+        write_console_log_line(text)
         html = self._console_html.convert(text)
         if not html:
             return
