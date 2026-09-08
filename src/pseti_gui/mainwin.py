@@ -189,10 +189,9 @@ class MainWin(QMainWindow, Ui_MainWindow):
 
     def ps_finished(self, exitCode, exitStatus):
         if exitStatus == QProcess.ExitStatus.NormalExit and exitCode == 0:
-            self.append_log('---------------------------------------------------------------------------')
-        else:
-            self.append_log("Command failed")
-            self.append_log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+            return
+        self.append_log("Command failed")
+        self.append_log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
 
     def append_log(self, text):
         write_console_log_line(text)

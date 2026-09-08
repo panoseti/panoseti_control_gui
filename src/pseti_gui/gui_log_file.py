@@ -49,7 +49,12 @@ def write_console_log_line(text: str) -> None:
     path = resolve_log_file_path()
     if path is None:
         return
-    text = _strip_ansi(text).rstrip("\n")
+    text = _strip_ansi(text)
+    # Rich pads log-record rows out to the console width, which reads fine in
+    # a real terminal but leaves a wall of trailing spaces on every line once
+    # mirrored to a plain file -- strip each line's own trailing whitespace,
+    # not just the block's trailing newline.
+    text = "\n".join(line.rstrip() for line in text.split("\n")).rstrip("\n")
     if not text:
         return
     try:
