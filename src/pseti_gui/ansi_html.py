@@ -23,10 +23,22 @@ _CODE_BLOCK_RE = re.compile(r"<code[^>]*>(.*)</code>", re.DOTALL)
 # still lines up like it would in a real terminal (box-drawing characters,
 # table columns, ...) -- QTextEdit's default font is proportional, and
 # without this the literal spaces Rich pads tables with wouldn't align.
+#
+# This is applied to a <div>, not a <pre>: Qt's rich-text engine treats <pre>
+# as always-unwrapped regardless of a `white-space` override, which is what
+# used to force a horizontal scrollbar on every Rich-rendered line (each one
+# padded out to COLUMNS=200 by Rich's own table layout) instead of wrapping
+# to the pane's actual width.
 _PRE_STYLE = (
-    "margin:0; white-space:pre-wrap; word-break:break-all; "
+    "margin:0; white-space:pre-wrap; "
     "font-family:Menlo,'DejaVu Sans Mono',Consolas,'Courier New',monospace;"
 )
+
+# Trailing run of spaces/tabs right before a line break (or end of string) --
+# Rich pads every table-rendered row (timestamps, log levels, ...) out to the
+# full console width, which is invisible in a real terminal but otherwise
+# shows up here as a wall of trailing whitespace on every line.
+_TRAILING_WS_RE = re.compile(r"[ \t]+(?=\r?\n|$)")
 
 # Rich renders `[green]`/`[bold green]` (used throughout panoseti/control's
 # CLI for success/OK/running status) as #008000, and its RichHandler-based
@@ -79,5 +91,6 @@ class AnsiToHtml:
         match = _CODE_BLOCK_RE.search(raw_html)
         inner = match.group(1) if match else text
         inner = inner.rstrip("\n")
+        inner = _TRAILING_WS_RE.sub("", inner)
         inner = _apply_color_overrides(inner)
-        return f'<pre style="{_PRE_STYLE}">{inner}</pre>'
+        return f'<div style="{_PRE_STYLE}">{inner}</div>'

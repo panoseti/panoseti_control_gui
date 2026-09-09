@@ -1,6 +1,6 @@
 from PyQt6.QtCore import QProcess, QProcessEnvironment
 from PyQt6.QtWidgets import QLabel, QMainWindow
-from PyQt6.QtGui import QPixmap, QTextCursor
+from PyQt6.QtGui import QPixmap, QTextCursor, QTextOption
 from PyQt6.QtCore import QSocketNotifier
 
 import json, os, sys
@@ -32,6 +32,11 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.logger.info('********************************************')
         super().__init__()
         self.setupUi(self)
+        # Qt's CSS support for `word-break` is unreliable, so force wrapping
+        # natively rather than relying on ansi_html.py's inline style alone --
+        # otherwise a long unbroken run (e.g. a padded table row) can still
+        # force a horizontal scrollbar instead of wrapping to the pane width.
+        self.console_output.setWordWrapMode(QTextOption.WrapMode.WrapAnywhere)
         self.actiondata_config.triggered.connect(self.open_data_config)
         # Both child processes' stdout/stderr are pipes, not a real terminal,
         # so their own Rich console can't query a terminal width and falls
