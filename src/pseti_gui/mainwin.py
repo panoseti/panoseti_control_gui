@@ -36,7 +36,11 @@ class MainWin(QMainWindow, Ui_MainWindow):
         # natively rather than relying on ansi_html.py's inline style alone --
         # otherwise a long unbroken run (e.g. a padded table row) can still
         # force a horizontal scrollbar instead of wrapping to the pane width.
-        self.console_output.setWordWrapMode(QTextOption.WrapMode.WrapAnywhere)
+        # WrapAtWordBoundaryOrAnywhere (not plain WrapAnywhere) so it wraps at
+        # a space when one's available -- plain WrapAnywhere would happily
+        # split a number like "8182" mid-digit just because that's where the
+        # pane's edge happens to fall.
+        self.console_output.setWordWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
         self.actiondata_config.triggered.connect(self.open_data_config)
         # Both child processes' stdout/stderr are pipes, not a real terminal,
         # so their own Rich console can't query a terminal width and falls
