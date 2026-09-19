@@ -195,6 +195,64 @@ Cancel and use File > Open... first; only on `Ok` does it call `collect_config()
 [panoseti's data_config.json constraints](../panoseti/CLAUDE.md#data-config-validation-constraints) for what
 values are actually valid before wiring up a new field.
 
+### Console pane: ANSI rendering, wrapping, `--watch` commands, and file mirroring
+
+`MainWin.__init__` builds one `QProcessEnvironment` (`wide_console_env`, shared by `ps_process` and
+`grpc_process`) with `FORCE_COLOR=1` — `pseti`'s Rich-based CLI otherwise detects a non-terminal stdout (a
+pipe, which is always what `QProcess` gives it) and strips its own ANSI color codes — plus `COLUMNS=200`/
+`LINES=50`, since without them Rich falls back to a hardcoded 80-column width and hard-wraps its own output
+(splitting table values mid-content) far short of the pane's actual width. `ps_stdout()`/`ps_stderr()` read
+that colored text and pass it through `append_log()`, which uses `ansi_html.py`'s `AnsiToHtml` (one
+long-lived instance in `MainWin.__init__`, `self._console_html`) to convert the ANSI SGR codes back into an
+HTML fragment via Rich's own `AnsiDecoder` + `Console.export_html()`, so the `console_output` pane (a
+`QTextEdit`, not `QPlainTextEdit`) renders the same colors/styles a real terminal would. `ansi_html.py` also
+remaps Rich's default greens (`#008000`/bright `#00ff00`, the latter from
+`panoseti_grpc.telemetry.logger`'s IPv4/IPv6 auto-highlighting) to a calmer, darker green for readability.
+
+Getting this pane to actually *wrap* (rather than grow a horizontal scrollbar) took two fixes working
+together, because Rich pads every table-rendered row (timestamps, log levels, ...) out to the full
+`COLUMNS=200` width it was just told to assume, which is invisible in a real terminal but would otherwise
+show up as either a wall of trailing whitespace or forced horizontal overflow in a GUI pane:
+- `ansi_html.py`'s `convert()` strips each line's trailing run of spaces/tabs before returning it, and
+  wraps the result in a `<div>`, not a `<pre>` — Qt's rich-text engine never wraps `<pre>` blocks regardless
+  of a `white-space` CSS override, which used to force a horizontal scrollbar on every rendered line.
+- `MainWin.__init__` additionally calls
+  `self.console_output.setWordWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)`, since Qt's CSS
+  support for `word-break` is unreliable — this wraps at a space when one's available and only falls back
+  to breaking mid-token (e.g. a long number) when a single run is wider than the pane itself.
+
+Every line that goes through `append_log()` is additionally mirrored to disk via `gui_log_file.py`'s
+`write_console_log_line()` — a no-op unless `PSETI_GUI_LOG_FILE` is set (a path template supporting a
+`{date}` placeholder, substituted with the current UTC date on every call so a long-running session rolls
+to a new dated file at UTC midnight without a restart); it strips each line's trailing padding the same way
+`ansi_html.py` does (the file mirror sees the same Rich-padded raw text) before writing, and writes are
+best-effort, swallowing `OSError` so a failure (e.g. an unwritable/missing mount) can never break the
+console pane itself.
+
+Command boundaries in the pane are marked by a plain dashed-line separator, printed on both sides of each
+boundary rather than deduplicated: `run_pseti()` prints one before the command line it's about to run, and
+`ps_finished()` prints another when that command exits successfully (a failed command gets "Command failed"
++ a `^^^^` marker instead) — so two commands run back to back show two separator lines in a row. This is
+intentional (each command's own start and end are both marked explicitly), not an oversight.
+
+Some `pseti` subcommands (e.g. `pseti stat --watch`) use Rich's `Live` view, which redraws in place via
+ANSI cursor-repositioning escape codes — fine in a real terminal, but garbage when streamed line-by-line
+into the console pane the way one-shot commands are. Buttons backing those subcommands instead call
+`terminal_launcher.py`'s `open_terminal_with_command()`, which opens a real, detached terminal emulator
+outside the GUI process: `osascript`/Terminal.app on macOS, or the first of
+`x-terminal-emulator`/`gnome-terminal`/`konsole`/`xfce4-terminal`/`xterm` found on `PATH` on Linux (raises
+`RuntimeError` with a manual-run suggestion if none are installed or the platform is neither).
+
+### Image-grid layout widget
+
+The 2×2 (or configured N×M) image grid is laid out by `square_grid.py`'s `SquareGridContainer`, not a plain
+`QGridLayout` — a `QGridLayout` stretches each cell to fill its row/column, which is only square when the
+container's overall aspect ratio happens to match `rows:cols`. `SquareGridContainer` instead manages child
+widget geometry itself on every `resizeEvent`: it picks the largest square cell size that still fits
+`cols`×`rows` in the available space, then centers the resulting grid, letterboxing whichever axis doesn't
+divide evenly. `MainWin` builds one of these (sized from `window_config.py`'s `rows`/`cols`) and places each
+cell's plot widget via `add_widget(widget, row, col)`.
+
 ## Logging
 
 Uses the project-standard `panoseti_grpc.telemetry.logger.get_logger(service_name, log_dir=...)` — the same

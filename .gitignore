@@ -4,3 +4,4 @@ daq_data/*
 logs/*
 .venv/
 .env
+.DS_Store
