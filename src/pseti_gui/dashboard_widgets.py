@@ -252,8 +252,7 @@ def configure_dashboard(window) -> None:
     status_layout.setColumnStretch(2, 1)
     window.statusbar.addPermanentWidget(status_content, 1)
     window.status_indicators = {}
-    for key, title in [('cameras', 'Cameras'), ('daq', 'DAQ'),
-                       ('visualization', 'Visualization'), ('transfer', 'Transfer')]:
+    for key, title in [('visualization', 'Visualization'), ('transfer', 'Transfer')]:
         indicator = StatusIndicator(title, window)
         window.status_indicators[key] = indicator
         indicator_layout.addWidget(indicator)

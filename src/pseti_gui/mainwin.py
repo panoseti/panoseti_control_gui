@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QProcess, QProcessEnvironment
+from PyQt6.QtCore import QProcess, QProcessEnvironment, QThread, QTimer, pyqtSignal
 from PyQt6.QtWidgets import QLabel, QMainWindow
 from PyQt6.QtGui import QPixmap, QTextCursor, QTextOption
 from PyQt6.QtCore import QSocketNotifier
@@ -18,6 +18,7 @@ from pseti_gui.square_grid import SquareGridContainer
 from pseti_gui.terminal_launcher import open_terminal_with_command
 from pseti_gui.ansi_html import AnsiToHtml
 from pseti_gui.gui_log_file import write_console_log_line
+from pseti_gui.status_check import check_power_status, check_transfer_daemon_status, grpc_process_check
 import asyncio, signal
 from multiprocessing import shared_memory, resource_tracker
 
@@ -25,6 +26,40 @@ from panoseti_grpc.telemetry.logger import get_logger
 
 SOCK_PATH = "/tmp/panoseti_meta.sock"
 FIGURE_DIR = Path(__file__).resolve().parent / "figure"
+
+
+class StatusCheckThread(QThread):
+    """Runs status_check.py's blocking checks off the Qt main thread.
+
+    A short-lived, one-shot thread rather than a long-running loop: MainWin
+    spins up a fresh instance on a QTimer tick (see _run_status_check()) and
+    lets it finish, so a single slow/hung `pseti` invocation (or a large
+    process table for grpc_process_check()) just delays that poll instead of
+    ever touching the UI thread.
+    """
+    power_checked = pyqtSignal(int, int)
+    transfer_checked = pyqtSignal(bool)
+    grpc_process_checked = pyqtSignal(bool)
+
+    def run(self):
+        try:
+            total, on_count = check_power_status()
+        except Exception:
+            pass
+        else:
+            self.power_checked.emit(total, on_count)
+        try:
+            running = check_transfer_daemon_status()
+        except Exception:
+            pass
+        else:
+            self.transfer_checked.emit(running)
+        try:
+            grpc_running = grpc_process_check()
+        except Exception:
+            pass
+        else:
+            self.grpc_process_checked.emit(grpc_running)
 class MainWin(QMainWindow, Ui_MainWindow):
     def __init__(self):
         self.logger = get_logger('pseti_gui.mainwin', log_dir='/var/log/panoseti')
@@ -36,7 +71,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
         configure_dashboard(self)
         self._power_command = None
         self._power_previous_checked = False
-        self._power_previous_label = "Unknown"
+        self._power_previous_label = "(-/-)"
         # Follow-up `pseti` argv to run once the power command itself
         # succeeds (redis daemons are started/stopped alongside power now
         # that the standalone Redis On/Off buttons are gone) -- None means
@@ -133,6 +168,16 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.shutdown_event = None
         self.setup_signal_functions()
         self._unmapped_module_ids_warned = set()
+        # Background power/transfer-daemon status polling (status_check.py):
+        # a fresh StatusCheckThread per tick, skipped if the previous one is
+        # still running so a slow `pseti` response can't pile up overlapping
+        # subprocess calls.
+        self._status_check_thread = None
+        self._status_timer = QTimer(self)
+        self._status_timer.setInterval(1000)
+        self._status_timer.timeout.connect(self._run_status_check)
+        self._status_timer.start()
+        self._run_status_check()
 
     # ---------------------------------------------------------------------------
     # signal functions for socket
@@ -462,6 +507,35 @@ class MainWin(QMainWindow, Ui_MainWindow):
             self._power_second_command = None
             self._finish_power_command(False)
 
+    def _run_status_check(self):
+        if self._status_check_thread is not None:
+            return  # previous poll hasn't finished yet; skip this tick rather than overlap it
+        thread = StatusCheckThread(self)
+        thread.power_checked.connect(self._on_power_status_checked)
+        thread.transfer_checked.connect(self._on_transfer_status_checked)
+        thread.grpc_process_checked.connect(self._on_grpc_process_status_checked)
+        thread.finished.connect(self._on_status_check_finished)
+        self._status_check_thread = thread
+        thread.start()
+
+    def _on_status_check_finished(self):
+        thread = self._status_check_thread
+        self._status_check_thread = None
+        if thread is not None:
+            thread.deleteLater()
+
+    def _on_power_status_checked(self, total, on_count):
+        if self._power_command is not None:
+            return  # a manual power toggle is mid-flight; don't stomp its "Pending…" label
+        self.power_state_label.setText(f'({on_count}/{total})')
+        self.power_state_label.setToolTip(f'{on_count} of {total} device(s) reporting power on.')
+
+    def _on_transfer_status_checked(self, running):
+        self.set_subsystem_status('transfer', 'running' if running else 'idle')
+
+    def _on_grpc_process_status_checked(self, running):
+        self.set_subsystem_status('visualization', 'running' if running else 'idle')
+
     def start_interleave_clicked(self):
         """Future integration point: call run_pseti() once the command is defined."""
         self.append_log('Start Interleave: command is not configured yet.')
@@ -543,6 +617,9 @@ class MainWin(QMainWindow, Ui_MainWindow):
         # delete uds
         if os.path.exists(SOCK_PATH):
             os.remove(SOCK_PATH)
+        self._status_timer.stop()
+        if self._status_check_thread is not None:
+            self._status_check_thread.wait(3000)
         event.accept()
 
     # ---------------------------------------------------------------------------

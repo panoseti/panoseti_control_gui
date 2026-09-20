@@ -1,9 +1,21 @@
+import os
 import shutil
 import sys
 from datetime import datetime
 from importlib.metadata import version
 from pathlib import Path
 from typing import Annotated
+
+# Must be set before anything below (mainwin.py -> panoseti_grpc.telemetry.logger)
+# transitively imports grpc, which registers a process-wide fork() handler the
+# moment its native library loads. status_check.py's periodic pseti subprocess
+# calls fork() every second from a background thread in this same process --
+# harmless since subprocess.run() always execs right after forking, but grpc's
+# handler still logs an "Other threads are currently calling into gRPC,
+# skipping fork() handlers" line each time. This opts out of that handler
+# entirely; it has no effect on grpc_process.py's actual gRPC client, which
+# never forks.
+os.environ.setdefault("GRPC_ENABLE_FORK_SUPPORT", "false")
 
 import typer
 from PyQt6.QtWidgets import QApplication

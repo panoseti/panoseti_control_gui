@@ -240,7 +240,7 @@ class Ui_MainWindow(object):
         self.power_label.setText(_translate("MainWindow", "Power:"))
         self.power_switch.setAccessibleName(_translate("MainWindow", "Power on/off"))
         self.power_switch.setToolTip(_translate("MainWindow", "Send power on/off commands. Physical power status is not monitored."))
-        self.power_state_label.setText(_translate("MainWindow", "Unknown"))
+        self.power_state_label.setText(_translate("MainWindow", "(-/-)"))
         self.initialization_heading.setText(_translate("MainWindow", "Initialization"))
         self.validate.setText(_translate("MainWindow", "Validate"))
         self.validate.setProperty("role", _translate("MainWindow", "normal"))
