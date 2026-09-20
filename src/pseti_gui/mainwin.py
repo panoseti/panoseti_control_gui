@@ -529,6 +529,11 @@ class MainWin(QMainWindow, Ui_MainWindow):
             return  # a manual power toggle is mid-flight; don't stomp its "Pending…" label
         self.power_state_label.setText(f'({on_count}/{total})')
         self.power_state_label.setToolTip(f'{on_count} of {total} device(s) reporting power on.')
+        # setChecked() doesn't emit clicked (only real user/keyboard activation
+        # does), so this can't recursively trigger power_toggled() -- it just
+        # makes the switch reflect reality, e.g. showing on at startup if every
+        # device is already observed to be on rather than defaulting to off.
+        self.power_switch.setChecked(total > 0 and on_count == total)
 
     def _on_transfer_status_checked(self, running):
         self.set_subsystem_status('transfer', 'running' if running else 'idle')
