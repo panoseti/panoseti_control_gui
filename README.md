@@ -109,8 +109,9 @@ buttons are labeled Start Visual / Stop Visual.
   while either command runs and restored on failure. `ON*`/`OFF*` report the last
   successful command, not measured hardware status; the initial status is Unknown.
 - **Initialization:** Validate, Health, Reboot, and GetUID.
-- **DAQ:** Start/Stop keep their existing commands. Start Interleave currently logs a
-  placeholder message; its command will be connected later.
+- **DAQ:** Start/Stop keep their existing commands. Start Interleave stays disabled until
+  Start Daq is clicked (and disables again on Stop Daq); it currently just logs a
+  placeholder message, its command will be connected later.
 - **Visualization:** choose PH1024, MOVIE16, or MOVIE8 before starting. The selection
   supplies `ph1024`, `mov16`, or `mov8` to `grpc_process`; movie modes subscribe to the
   movie stream. Stop visualization before changing modes. PH512 is not included yet.

@@ -271,7 +271,9 @@ panels, console, and status bar. `dashboard_widgets.py` supplies the promoted
 `PowerSwitch`, labeled camera placeholders, status indicators, theme, and clock.
 Redis buttons are removed. Power still uses `pseti power on/off`; the displayed
 `ON*`/`OFF*` means the last successful command, not queried hardware state.
-`start_interleave_clicked()` is an explicit no-command placeholder.
+`start_interleave_clicked()` is an explicit no-command placeholder; the button itself starts
+disabled (`configure_dashboard()`) and is only enabled/disabled by `startdaq_clicked()`/
+`stopdaq_clicked()`, so it can't be clicked before DAQ has been started.
 
 `visualization_mode` maps PH1024/MOVIE16/MOVIE8 to `ph1024`/`mov16`/`mov8` and is locked
 while the child runs. Movie modes select movie streaming in `grpc_process.run()`.

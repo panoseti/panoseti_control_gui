@@ -575,9 +575,11 @@ class MainWin(QMainWindow, Ui_MainWindow):
 
     def startdaq_clicked(self):
         self.run_pseti('start', '--yes')
+        self.start_interleave.setEnabled(True)
 
     def stopdaq_clicked(self):
         self.run_pseti('stop', '--yes')
+        self.start_interleave.setEnabled(False)
 
     def xfr_start_clicked(self):
         self.run_pseti('xfr', 'start')
