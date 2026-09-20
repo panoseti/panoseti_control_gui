@@ -284,10 +284,15 @@ width from the available grid height, accounting for the camera heading and marg
 It does not crop the panel or leave unused space beneath a shortened square frame.
 The camera header shows Telescope View at the left; the right header places power
 controls at its far right. Both header rows are defined directly in the `.ui`. The live
-clock is centered in the bottom status bar between session information and indicators. The command groups use a
-single `QHBoxLayout` with a reserved minimum width and never wrap. Narrower windows
-therefore shrink the square camera cells instead. The default window is 1640×900.
-The divider is draggable. `ImageDashboardSplitter` auto-fits images until the first
-manual drag, then lets Qt preserve the chosen proportions on window resize. A queued
-auto-fit also checks this flag so it cannot undo a drag. Right-side minimum widths
-keep command groups in one row. The splitter is a promoted widget in the `.ui`.
+clock is centered in the bottom status bar between session information and indicators. The command groups
+share a single `QHBoxLayout` (`groups_layout`) and never wrap. `configure_dashboard()` in `dashboard_widgets.py`
+gives each of the 5 panels (`initialization`/`configuration`/`daq`/`visualization`/`transfer`) a
+`setMinimumWidth()` floor equal to its content's natural width (from an explicit `preferred_widths` map or
+`minimumSizeHint()`) plus `QSizePolicy.Policy.Expanding`, then calls `groups_layout.setStretch(index, width)`
+with that same width per panel — so on a window wide enough to give the row more than its combined floor,
+every panel grows by the same ratio to fill it (instead of sitting left-packed with blank space on the
+right, which is what a plain `Preferred` policy + fixed per-panel widths used to produce), and on a narrower
+window the floor still holds and the square camera cells shrink instead of the controls wrapping. The
+default window is 1640×900. The divider is draggable. `ImageDashboardSplitter` auto-fits images until the
+first manual drag, then lets Qt preserve the chosen proportions on window resize. A queued auto-fit also
+checks this flag so it cannot undo a drag. The splitter is a promoted widget in the `.ui`.

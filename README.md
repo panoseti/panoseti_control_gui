@@ -97,8 +97,9 @@ camera cells. The image header reads Telescope View. The clock is centered in th
 in the control header. Drag the divider between the camera and control panels to
 adjust their widths. The initial layout fits square images; after a manual adjustment,
 resizing the window preserves the chosen split subject to panel minimum widths.
-The default 1640×900 window fits a 1920×1080 display;
-command panels use compact, content-aware widths instead of stretching. Visualization
+The default 1640×900 window fits a 1920×1080 display; each command panel keeps its
+content-driven width as a floor but stretches proportionally to fill the row on a wider
+window, instead of staying compact and leaving blank space on the right. Visualization
 buttons are labeled Start Visual / Stop Visual.
 
 - **Power:** one switch runs `pseti power on`/`pseti power off`, then `pseti cfg

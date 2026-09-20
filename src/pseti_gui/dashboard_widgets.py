@@ -5,7 +5,7 @@ from time import monotonic
 
 from PyQt6.QtCore import QDateTime, QRectF, QSize, Qt, QTimer
 from PyQt6.QtGui import QColor, QPainter, QPen
-from PyQt6.QtWidgets import QAbstractButton, QFrame, QLabel, QSizePolicy, QWidget, QSplitter, QLayout, QHBoxLayout, QGridLayout
+from PyQt6.QtWidgets import QAbstractButton, QFrame, QLabel, QSizePolicy, QWidget, QSplitter, QHBoxLayout, QGridLayout
 
 
 class ImageDashboardSplitter(QSplitter):
@@ -195,7 +195,6 @@ QStatusBar QLabel { color: #65748b; font-size: 12px; }
 
 def configure_dashboard(window) -> None:
     window.setStyleSheet(STYLE)
-    window.groups_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
     window.main_splitter.setSizes([795, 817])
     window.main_splitter.setStretchFactor(0, 1)
     window.main_splitter.setStretchFactor(1, 1)
@@ -203,23 +202,32 @@ def configure_dashboard(window) -> None:
     window.visualization_mode.addItem('PH1024', 'ph1024')
     window.visualization_mode.addItem('MOVIE16', 'mov16')
     window.visualization_mode.addItem('MOVIE8', 'mov8')
-    # Reserve the complete single-row command width before sizing the images.
-    # Never wrap controls just to maintain a larger camera area.
+    # Never wrap controls just to maintain a larger camera area -- each panel
+    # keeps its content-driven width as a floor (setMinimumWidth, not
+    # setFixedWidth) and gets a stretch factor proportional to that same
+    # width, so on a wide window the row grows to fill it with every panel
+    # widened by the same ratio rather than sitting left-packed with a big
+    # gap on the right; on a narrow window the floor still applies and the
+    # camera cells shrink instead of the controls wrapping.
     panels = [getattr(window, name + '_panel') for name in
               ('initialization', 'configuration', 'daq', 'visualization', 'transfer')]
     preferred_widths = {'initialization_panel': 116, 'visualization_panel': 176}
+    computed_widths = []
     for panel in panels:
         panel.ensurePolished()
         for child in panel.findChildren(QWidget):
             child.ensurePolished()
-        panel.setFixedWidth(max(
-            preferred_widths.get(panel.objectName(), 136), panel.minimumSizeHint().width()
-        ))
-    window.groups_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        width = max(preferred_widths.get(panel.objectName(), 136), panel.minimumSizeHint().width())
+        panel.setMinimumWidth(width)
+        panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        computed_widths.append(width)
+    for index, width in enumerate(computed_widths):
+        window.groups_layout.setStretch(index, width)
+    window.groups_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
     window.command_groups.setMinimumWidth(
-        sum(panel.width() for panel in panels) + 4 * window.groups_layout.spacing()
+        sum(computed_widths) + 4 * window.groups_layout.spacing()
     )
-    window.command_groups.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+    window.command_groups.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
     window.stop_grpc.setEnabled(False)
     window.start_interleave.setToolTip('Interleave command is not configured yet.')
     window.clear_logs.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
