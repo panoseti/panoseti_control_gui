@@ -125,8 +125,11 @@ class DaqDataBackend(object):
 async def run(host: str, port: int, mode: str):
     backend = DaqDataBackend(host, port, mode)
     backend.send_shm_info()
-    await backend.send_images()
-    backend.close()
+    try:
+        movie_mode = mode in ('mov8', 'mov16')
+        await backend.send_images(ph_data=not movie_mode, mov_data=movie_mode)
+    finally:
+        backend.close()
 
 app = typer.Typer(add_completion=False)
 

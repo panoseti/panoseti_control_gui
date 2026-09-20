@@ -61,7 +61,7 @@ of whatever environment launches `pseti-gui` — see Architecture for `uv tool i
 
 The GUI process (`MainWin`) never talks gRPC directly. Instead:
 
-1. **Control actions** — every button (`power_on_clicked`, `marocconfig_clicked`, `getuid_clicked`,
+1. **Control actions** — every button (`power_toggled`, `marocconfig_clicked`, `getuid_clicked`,
    `startdaq_clicked`/`stopdaq_clicked`, redis/reboot/calibration, etc.) goes through `run_pseti(*args)`,
    which invokes the `pseti` CLI **by name on `PATH`** via `QProcess` (`pseti power on`, `pseti cfg
    maroc-config`, `pseti uids`, `pseti start`, `pseti stop`, …) — see the `panoseti/control` CLI reference
@@ -100,8 +100,8 @@ and sends two kinds of newline-delimited JSON messages via `send_metadata()`:
 
 Both sides call `resource_tracker.unregister(shm._name, 'shared_memory')` — required because Python's
 `resource_tracker` otherwise tries to unlink the block a second time when the *creating* process (`grpc_process`)
-exits, racing the GUI process that still holds it open. `stop_grpc_clicked()` in `mainwin.py` is the only place
-that actually calls `shm.unlink()`, guarded by `try/except` since the child process may already be gone.
+exits, racing the GUI process that still holds it open. `_release_visualization()` in `mainwin.py` releases the socket and shared memory after
+the child exits (including stop and failed-start paths), guarding `shm.unlink()` against an already removed block.
 
 Shutdown is `SIGINT`-driven, not a clean RPC: `stop_grpc_clicked()` sends `SIGINT` to the child's PID
 (`self.grpc_process.processId()`), which `grpc_process.py`'s `signal.signal(SIGINT, handler)` turns into
@@ -263,3 +263,31 @@ Each component gets its own logger under the `pseti_gui.*` namespace (`pseti_gui
 current user. `grpc_process.py`'s own stdout/stderr is additionally captured by the *parent* process via
 `QProcess` and unconditionally `print()`-ed to the terminal `pseti-gui` was launched from
 (`grpc_stdout`/`grpc_stderr` in `mainwin.py`).
+
+### Dashboard presentation
+
+`ui/mainwin.ui` defines the camera/control splitter, header power switch, five command
+panels, console, and status bar. `dashboard_widgets.py` supplies the promoted
+`PowerSwitch`, labeled camera placeholders, status indicators, theme, and clock.
+Redis buttons are removed. Power still uses `pseti power on/off`; the displayed
+`ON*`/`OFF*` means the last successful command, not queried hardware state.
+`start_interleave_clicked()` is an explicit no-command placeholder.
+
+`visualization_mode` maps PH1024/MOVIE16/MOVIE8 to `ph1024`/`mov16`/`mov8` and is locked
+while the child runs. Movie modes select movie streaming in `grpc_process.run()`.
+PH512 is deferred. Status monitoring is also deferred: all four indicators start
+Unknown; future GUI-thread callbacks use `set_subsystem_status(subsystem, state, detail)`.
+The image grid remains configuration-driven and the console remains ANSI-capable text.
+
+The camera/control split is managed by `ImageDashboardSplitter`: it allocates image
+width from the available grid height, accounting for the camera heading and margins.
+It does not crop the panel or leave unused space beneath a shortened square frame.
+The camera header shows Telescope View at the left; the right header places power
+controls at its far right. Both header rows are defined directly in the `.ui`. The live
+clock is centered in the bottom status bar between session information and indicators. The command groups use a
+single `QHBoxLayout` with a reserved minimum width and never wrap. Narrower windows
+therefore shrink the square camera cells instead. The default window is 1640×900.
+The divider is draggable. `ImageDashboardSplitter` auto-fits images until the first
+manual drag, then lets Qt preserve the chosen proportions on window resize. A queued
+auto-fit also checks this flag so it cannot undo a drag. Right-side minimum widths
+keep command groups in one row. The splitter is a promoted widget in the `.ui`.

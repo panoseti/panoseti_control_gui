@@ -85,3 +85,36 @@ module's first real frame arrives, and reverts to the default placeholder image 
 
 The Data Config window (Configs > Data Config) remembers the last file you opened across GUI restarts, and
 asks for confirmation naming the exact target file before writing it.
+
+# Dashboard controls
+
+The main window sizes the camera/control split from the available image height, with five command groups, a colored
+console with a Clear button, and a bottom status bar. Camera slots and titles still
+come from `window_config.json`; the default remains the four configured modules.
+The five command groups always stay in one horizontal row. Their full width is
+reserved before allocating space to the images; narrower windows use smaller square
+camera cells. The image header reads Telescope View. The clock is centered in the bottom status bar, beside the status indicators; power controls are right-aligned
+in the control header. Drag the divider between the camera and control panels to
+adjust their widths. The initial layout fits square images; after a manual adjustment,
+resizing the window preserves the chosen split subject to panel minimum widths.
+The default 1640×900 window fits a 1920×1080 display;
+command panels use compact, content-aware widths instead of stretching. Visualization
+buttons are labeled Start Visual / Stop Visual.
+
+- **Power:** one switch runs the existing `pseti power on/off` commands. It is disabled
+  while the command runs and restored on failure. `ON*`/`OFF*` report the last successful
+  command, not measured hardware status; the initial status is Unknown.
+- **Initialization:** Validate, Health, Reboot, and GetUID. Redis controls have been removed.
+- **DAQ:** Start/Stop keep their existing commands. Start Interleave currently logs a
+  placeholder message; its command will be connected later.
+- **Visualization:** choose PH1024, MOVIE16, or MOVIE8 before starting. The selection
+  supplies `ph1024`, `mov16`, or `mov8` to `grpc_process`; movie modes subscribe to the
+  movie stream. Stop visualization before changing modes. PH512 is not included yet.
+- **Status lights:** Cameras, DAQ, Visualization, and Transfer initially show Unknown.
+  Monitoring is not implemented. Future observers can call
+  `MainWin.set_subsystem_status(subsystem, state, detail)` on the GUI thread, using
+  `unknown`, `idle`, `running`, `warning`, or `error` states.
+
+Layout changes belong in `ui/mainwin.ui`; switch, status, and styling components live
+in `src/pseti_gui/dashboard_widgets.py`. Regenerate the UI with
+`uv run python -m PyQt6.uic.pyuic ui/mainwin.ui -o src/pseti_gui/mainwin_ui.py`.

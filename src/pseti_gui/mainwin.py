@@ -10,6 +10,7 @@ import numpy as np
 import socket
 
 from pseti_gui.mainwin_ui import Ui_MainWindow
+from pseti_gui.dashboard_widgets import CameraPlaceholder, configure_dashboard
 from pseti_gui.data_config_win import DataConfigWin, DataConfigOp
 from pseti_gui.window_config import load_window_config, DEFAULT_TITLE
 from pseti_gui.grpc_config import load_grpc_config
@@ -32,6 +33,10 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.logger.info('********************************************')
         super().__init__()
         self.setupUi(self)
+        configure_dashboard(self)
+        self._power_command = None
+        self._power_previous_checked = False
+        self._power_previous_label = "Unknown"
         # Qt's CSS support for `word-break` is unreliable, so force wrapping
         # natively rather than relying on ansi_html.py's inline style alone --
         # otherwise a long unbroken run (e.g. a padded table row) can still
@@ -66,13 +71,15 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.ps_process.readyReadStandardOutput.connect(self.ps_stdout)
         self.ps_process.readyReadStandardError.connect(self.ps_stderr)
         self.ps_process.finished.connect(self.ps_finished)
+        self.ps_process.errorOccurred.connect(self.ps_error)
         # Process for panoseti grpc
         self.grpc_process = QProcess(self)
         self.grpc_process.setProcessEnvironment(wide_console_env)
         self.grpc_process.readyReadStandardOutput.connect(self.grpc_stdout)
         self.grpc_process.readyReadStandardError.connect(self.grpc_stderr)
         self.grpc_process.finished.connect(self.grpc_finished)
-        self.grpc_process_exit = False
+        self.grpc_process.errorOccurred.connect(self.grpc_error)
+        self.grpc_process_exit = True
         # set socket notifier
         if os.path.exists(SOCK_PATH):
             os.remove(SOCK_PATH)
@@ -101,10 +108,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
             f"Loaded window config from {self.window_config.path} "
             f"({self.rows}x{self.cols} grid, {len(self.window_config.slots)} module(s) mapped)"
         )
-        # The .ui's view_layout ships 4 hardcoded view0-3_widget placeholders
-        # for a fixed 2x2 grid. Drop them and replace with a SquareGridContainer
-        # that lays out an arbitrary rows x cols grid, resizing cells to stay
-        # square and fill the available area (see square_grid.py).
+        # Populate the Designer layout with a configurable square image grid.
         for i in reversed(range(self.view_layout.count())):
             item = self.view_layout.takeAt(i)
             w = item.widget()
@@ -178,7 +182,9 @@ class MainWin(QMainWindow, Ui_MainWindow):
     def set_placeholder(self, r, c):
         i = r * self.cols + c
         pixmap = QPixmap(str(FIGURE_DIR / "placeholder.png"))
-        label = QLabel()
+        title = next((slot.title for slot in self.window_config.slots.values()
+                      if slot.row == r and slot.col == c), DEFAULT_TITLE)
+        label = CameraPlaceholder(title)
         label.setPixmap(pixmap)
         # SquareGridContainer resizes this label's geometry to the current
         # square cell size; scaledContents stretches the pixmap to match.
@@ -197,6 +203,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.append_log(text)
 
     def ps_finished(self, exitCode, exitStatus):
+        self._finish_power_command(exitStatus == QProcess.ExitStatus.NormalExit and exitCode == 0)
         if exitStatus == QProcess.ExitStatus.NormalExit and exitCode == 0:
             self.append_log('---------------------------------------------------------------------------')
             return
@@ -231,55 +238,75 @@ class MainWin(QMainWindow, Ui_MainWindow):
         cursor.movePosition(QTextCursor.MoveOperation.NextBlock, QTextCursor.MoveMode.KeepAnchor, excess)
         cursor.removeSelectedText()
 
-    def start_grpc_clicked(self, mode='ph1024'):
-        self.logger.info('Start PANOSETI gPRC process.')
-        self.grpc_process_exit = False
-        program = sys.executable
-        grpc_config = load_grpc_config()
+    def start_grpc_clicked(self):
+        if not self.grpc_process_exit:
+            return
+        mode = self.visualization_mode.currentData()
+        try:
+            grpc_config = load_grpc_config()
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            self.append_log(f"Cannot load visualization configuration: {exc}")
+            return
+        self.logger.info(f'Start PANOSETI gRPC process ({mode}).')
         self.logger.info(
-            f"Loaded grpc config from {grpc_config.path} "
-            f"(host={grpc_config.host}, port={grpc_config.port})"
+            f'Loaded grpc config from {grpc_config.path} '
+            f'(host={grpc_config.host}, port={grpc_config.port})'
         )
+        self.grpc_process_exit = False
+        self.visualization_mode.setEnabled(False)
+        self.start_grpc.setEnabled(False)
+        self.stop_grpc.setEnabled(True)
         args = [
             '-u', '-m', 'pseti_gui.grpc_process',
             '--host', grpc_config.host,
             '--port', str(grpc_config.port),
-            '-m', 'ph1024',
+            '-m', mode,
         ]
-        self.grpc_process.start(program, args)
-        # Show every window immediately with a zero-valued image and the
-        # default title -- per-module title/data get filled in as each
-        # module_id's first real frame arrives via plot_data().
         self.init_all_plots_zero()
+        self.grpc_process.start(sys.executable, args)
 
     def stop_grpc_clicked(self):
-        self.logger.info('Stop PANOSETI gPRC process.')
-        # close shared memory
+        self.logger.info('Stop PANOSETI gRPC process.')
+        pid = self.grpc_process.processId()
+        if pid:
+            try:
+                os.kill(pid, signal.SIGINT)
+            except ProcessLookupError:
+                pass
+            if not self.grpc_process.waitForFinished(3000):
+                self.append_log('Visualization is still stopping; please wait.')
+                return
+        if not self.grpc_process_exit and self.grpc_process.state() == QProcess.ProcessState.NotRunning:
+            self._release_visualization()
+
+    def _release_visualization(self):
+        """Restore controls and release the previous stream before another mode starts."""
+        if self.conn_notifier is not None:
+            self.conn_notifier.setEnabled(False)
+            self.conn_notifier.deleteLater()
+            self.conn_notifier = None
+        if self.conn is not None:
+            self.conn.close()
+            self.conn = None
+        self.img = None
         if self.shm is not None:
             self.shm.close()
-        # send SIGINT to the grpc process
-        pid = self.grpc_process.processId()
-        if pid != 0:
-            self.logger.debug(f"PANOSETI gPRC PID: {pid}")
-            os.kill(pid, signal.SIGINT)
-        else:
-            self.logger.debug("No PANOSETI gRPC process found.")
-        self.grpc_process.waitForFinished(3000)
-        # try to unlink shared memory
-        # it may already be unlinked on the grpc process
-        if self.shm is not None:
             try:
                 self.shm.unlink()
-            except:
-                self.logger.debug('Shared Memory may already be unlinked.')
+            except FileNotFoundError:
+                pass
             self.shm = None
-        # re-enable the notificer
         self.server_notifier.setEnabled(True)
         self.grpc_process_exit = True
-        # grpc_process is fully stopped (waitForFinished above already
-        # returned) so no more frames can arrive; safe to revert every
-        # window back to its default placeholder image.
+        self.visualization_mode.setEnabled(True)
+        self.start_grpc.setEnabled(True)
+        self.stop_grpc.setEnabled(False)
         self.reset_all_plots()
+
+    def grpc_error(self, error):
+        if error == QProcess.ProcessError.FailedToStart:
+            self.append_log(f'Cannot start visualization: {self.grpc_process.errorString()}')
+            self._release_visualization()
 
     def init_all_plots_zero(self):
         """Show every window as a zero-valued image with the default title,
@@ -326,6 +353,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
         print(text, end='')
     
     def grpc_finished(self, exitCode, exitStatus):
+        self._release_visualization()
         if exitStatus == QProcess.ExitStatus.NormalExit and exitCode == 0:
             self.logger.info('PANOSETI gRPC process exited gracefully.')
         else:
@@ -379,26 +407,53 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.ps_process.start(program, arguments)
     
     def run_pseti(self, *pseti_args):
-        # `pseti` is resolved on PATH (installed via `uv tool install`), not
-        # via panoseti_sw.python_path -- decouples pseti-gui from needing to
-        # know where the panoseti/control checkout or its interpreter live.
+        # Resolve the standalone CLI on PATH, independently of this interpreter.
+        if self.ps_process.state() != QProcess.ProcessState.NotRunning:
+            self.append_log('A command is already running. Wait for it to finish.')
+            return False
         cmdline = 'pseti ' + ' '.join(pseti_args)
         self.append_log('---------------------------------------------------------------------------')
         self.append_log(cmdline)
         self.append_log('---------------------------------------------------------------------------')
         self.run_command('pseti', list(pseti_args))
+        return True
 
-    def power_on_clicked(self):
-        self.run_pseti('power', 'on')
+    def power_toggled(self, checked):
+        if self.ps_process.state() != QProcess.ProcessState.NotRunning:
+            self.power_switch.setChecked(not checked)
+            self.append_log('A command is already running. Wait before changing power.')
+            return
+        self._power_previous_checked = not checked
+        self._power_previous_label = self.power_state_label.text()
+        self._power_command = checked
+        self.power_switch.setEnabled(False)
+        self.power_state_label.setText('Pending…')
+        self.run_pseti('power', 'on' if checked else 'off')
 
-    def power_off_clicked(self):
-        self.run_pseti('power', 'off')
+    def _finish_power_command(self, success):
+        if self._power_command is None:
+            return
+        if success:
+            self.power_state_label.setText('ON*' if self._power_command else 'OFF*')
+            self.power_state_label.setToolTip('Last successful command; physical power status is not monitored.')
+        else:
+            self.power_switch.setChecked(self._power_previous_checked)
+            self.power_state_label.setText(self._power_previous_label)
+        self._power_command = None
+        self.power_switch.setEnabled(True)
 
-    def redis_on_clicked(self):
-        self.run_pseti('cfg', 'redis-daemons')
+    def ps_error(self, error):
+        if error == QProcess.ProcessError.FailedToStart:
+            self.append_log(f'Cannot start command: {self.ps_process.errorString()}')
+            self._finish_power_command(False)
 
-    def redis_off_clicked(self):
-        self.run_pseti('cfg', 'stop-redis-daemons')
+    def start_interleave_clicked(self):
+        """Future integration point: call run_pseti() once the command is defined."""
+        self.append_log('Start Interleave: command is not configured yet.')
+
+    def set_subsystem_status(self, subsystem: str, state: str, detail: str | None = None):
+        """UI-thread entry point for future status observers; no polling is installed."""
+        self.status_indicators[subsystem].set_status(state, detail)
 
     def reboot_clicked(self):
         self.run_pseti('cfg', 'reboot')
@@ -479,10 +534,8 @@ class MainWin(QMainWindow, Ui_MainWindow):
     # Setup signal function
     # ---------------------------------------------------------------------------
     def setup_signal_functions(self):
-        self.power_on.clicked.connect(self.power_on_clicked)
-        self.power_off.clicked.connect(self.power_off_clicked)
-        self.redis_on.clicked.connect(self.redis_on_clicked)
-        self.redis_off.clicked.connect(self.redis_off_clicked)
+        self.power_switch.clicked.connect(self.power_toggled)
+        self.start_interleave.clicked.connect(self.start_interleave_clicked)
         self.reboot.clicked.connect(self.reboot_clicked)
         self.start_grpc.clicked.connect(self.start_grpc_clicked)
         self.stop_grpc.clicked.connect(self.stop_grpc_clicked)
@@ -499,4 +552,3 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.xfr_stop.clicked.connect(self.xfr_stop_clicked)
         self.xfr_status.clicked.connect(self.xfr_status_clicked)
         self.xfr_monitor.clicked.connect(self.xfr_monitor_clicked)
-

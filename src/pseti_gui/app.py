@@ -16,8 +16,6 @@ from pseti_gui.mainwin import MainWin
 # an env var it might set, such as PSETI_WINDOW_CONFIG_FILE.
 load_pseti_gui_env()
 
-VER = f'V{version("pseti-gui")}'
-
 CONFIGS_DIR = Path(__file__).resolve().parent / "configs"
 ENV_EXAMPLE_PATH = Path(__file__).resolve().parent / ".env.example"
 
@@ -106,7 +104,7 @@ def main(
     icon_path = Path(__file__).resolve().parent / "figure" / "panoseti_icon.png"
     qapp.setWindowIcon(QIcon(str(icon_path)))
     w = MainWin()
-    w.setWindowTitle(f"PANOSETI Control - {VER}")
+    w.setWindowTitle("PANOSETI Control")
     w.show()
     sys.exit(qapp.exec())
 

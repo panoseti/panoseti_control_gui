@@ -6,407 +6,582 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1475</width>
-    <height>811</height>
+    <width>1640</width>
+    <height>900</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>PANOSETI Control</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="1" column="0">
-     <widget class="QFrame" name="frame_3">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>1</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
+   <layout class="QHBoxLayout" name="root_layout">
+    <property name="spacing">
+     <number>12</number>
+    </property>
+    <item>
+     <widget class="ImageDashboardSplitter" name="main_splitter">
+      <property name="orientation">
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
-      <property name="frameShape">
-       <enum>QFrame::Shape::StyledPanel</enum>
+      <property name="childrenCollapsible">
+       <bool>false</bool>
       </property>
-      <property name="frameShadow">
-       <enum>QFrame::Shadow::Raised</enum>
+      <property name="handleWidth">
+       <number>10</number>
       </property>
-      <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0">
-        <layout class="QGridLayout" name="view_layout">
-         <item row="0" column="0">
-          <widget class="QWidget" name="view0_widget" native="true">
-           <layout class="QGridLayout" name="gridLayout_5"/>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QWidget" name="view1_widget" native="true">
-           <layout class="QGridLayout" name="gridLayout_6"/>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QWidget" name="view2_widget" native="true">
-           <layout class="QGridLayout" name="gridLayout_7"/>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QWidget" name="view3_widget" native="true">
-           <layout class="QGridLayout" name="gridLayout_8"/>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item row="1" column="1">
-     <widget class="QFrame" name="frame_2">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>1</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::Shape::StyledPanel</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Shadow::Raised</enum>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_11">
-       <item row="6" column="0" colspan="3">
-        <widget class="QTextEdit" name="console_output">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>4</horstretch>
-           <verstretch>2</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Logs</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="label_4">
-         <property name="font">
-          <font>
-           <pointsize>25</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>PANOSETI Control</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0" colspan="3">
-        <widget class="QFrame" name="frame">
-         <property name="frameShape">
-          <enum>QFrame::Shape::StyledPanel</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Shadow::Raised</enum>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_3">
-          <item row="1" column="1">
-           <widget class="QFrame" name="frame_6">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>1</horstretch>
-              <verstretch>1</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::Shape::StyledPanel</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Shadow::Raised</enum>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_12">
-             <item row="3" column="2">
-              <widget class="QPushButton" name="cal_ph">
-               <property name="text">
-                <string>CalibratePH</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="2">
-              <widget class="QPushButton" name="mask_config">
-               <property name="text">
-                <string>MaskConfig</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="2">
-              <widget class="QPushButton" name="maroc_config">
-               <property name="text">
-                <string>MarocConfig</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="2">
-              <widget class="QPushButton" name="show_baselines">
-               <property name="text">
-                <string>ShowBaselines</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="0" column="3">
-           <widget class="QLabel" name="label_6">
+      <widget class="QFrame" name="camera_panel">
+       <layout class="QVBoxLayout" name="camera_layout" stretch="0,1">
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <item>
+         <layout class="QHBoxLayout" name="camera_header_layout">
+          <item>
+           <widget class="QLabel" name="camera_heading">
             <property name="text">
-             <string>Transfer</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="3">
-           <widget class="QFrame" name="frame_5">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>1</horstretch>
-              <verstretch>1</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::Shape::StyledPanel</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Shadow::Raised</enum>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_13">
-             <item row="0" column="0">
-              <widget class="QPushButton" name="xfr_start">
-               <property name="text">
-                <string>Start</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QPushButton" name="xfr_stop">
-               <property name="text">
-                <string>Stop</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QPushButton" name="xfr_status">
-               <property name="text">
-                <string>Status</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QPushButton" name="xfr_monitor">
-               <property name="text">
-                <string>Monitor</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_7">
-            <property name="text">
-             <string>Daq</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QFrame" name="frame_4">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>1</horstretch>
-              <verstretch>1</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::Shape::StyledPanel</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Shadow::Raised</enum>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_9">
-             <item row="1" column="0">
-              <widget class="QPushButton" name="stop_daq">
-               <property name="text">
-                <string>Stop Daq</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QPushButton" name="start_daq">
-               <property name="text">
-                <string>Start Daq</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QPushButton" name="start_grpc">
-               <property name="text">
-                <string>Start Visualization</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QPushButton" name="stop_grpc">
-               <property name="text">
-                <string>Stop Visualization</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QFrame" name="frame_7">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>1</horstretch>
-              <verstretch>1</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::Shape::StyledPanel</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Shadow::Raised</enum>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_10">
-             <item row="2" column="1">
-              <widget class="QPushButton" name="get_uid">
-               <property name="text">
-                <string>GetUID</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QPushButton" name="reboot">
-               <property name="text">
-                <string>Reboot</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QPushButton" name="validate">
-               <property name="text">
-                <string>Validate</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QPushButton" name="health">
-               <property name="text">
-                <string>Health</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QPushButton" name="power_on">
-               <property name="text">
-                <string>Power On</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QPushButton" name="power_off">
-               <property name="text">
-                <string>Power Off</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QPushButton" name="redis_on">
-               <property name="text">
-                <string>Redis On</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QPushButton" name="redis_off">
-               <property name="text">
-                <string>Redis Off</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>Initlization</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="label_8">
-            <property name="text">
-             <string>Config</string>
+             <string>Telescope View</string>
             </property>
            </widget>
           </item>
          </layout>
-        </widget>
-       </item>
-      </layout>
+        </item>
+        <item>
+         <widget class="QWidget" name="camera_content">
+          <layout class="QGridLayout" name="view_layout">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="control_panel">
+       <layout class="QVBoxLayout" name="control_layout" stretch="0,0,1">
+        <property name="spacing">
+         <number>12</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QFrame" name="header_panel">
+          <layout class="QGridLayout" name="header_layout">
+           <property name="spacing">
+            <number>8</number>
+           </property>
+           <item row="0" column="0">
+            <widget class="QLabel" name="app_heading">
+             <property name="text">
+              <string>PANOSETI Control</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="power_label">
+             <property name="text">
+              <string>Power:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="4">
+            <widget class="PowerSwitch" name="power_switch">
+             <property name="accessibleName">
+              <string>Power on/off</string>
+             </property>
+             <property name="toolTip">
+              <string>Send power on/off commands. Physical power status is not monitored.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLabel" name="power_state_label">
+             <property name="text">
+              <string>Unknown</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <spacer name="header_spacer">
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>0</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="command_groups">
+          <layout class="QHBoxLayout" name="groups_layout">
+           <property name="spacing">
+            <number>8</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QFrame" name="initialization_panel">
+             <layout class="QVBoxLayout" name="initialization_layout">
+              <property name="spacing">
+               <number>6</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="initialization_heading">
+                <property name="text">
+                 <string>Initialization</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="validate">
+                <property name="text">
+                 <string>Validate</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>normal</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="health">
+                <property name="text">
+                 <string>Health</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>normal</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="reboot">
+                <property name="text">
+                 <string>Reboot</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>normal</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="get_uid">
+                <property name="text">
+                 <string>GetUID</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>normal</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="initialization_spacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <property name="leftMargin">
+               <number>6</number>
+              </property>
+              <property name="rightMargin">
+               <number>6</number>
+              </property>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QFrame" name="configuration_panel">
+             <layout class="QVBoxLayout" name="configuration_layout">
+              <property name="spacing">
+               <number>6</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="configuration_heading">
+                <property name="text">
+                 <string>Configuration</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="maroc_config">
+                <property name="text">
+                 <string>MarocConfig</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>normal</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="mask_config">
+                <property name="text">
+                 <string>MaskConfig</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>normal</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="cal_ph">
+                <property name="text">
+                 <string>CalibratePH</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>normal</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="show_baselines">
+                <property name="text">
+                 <string>ShowBaselines</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>normal</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="configuration_spacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <property name="leftMargin">
+               <number>6</number>
+              </property>
+              <property name="rightMargin">
+               <number>6</number>
+              </property>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QFrame" name="daq_panel">
+             <layout class="QVBoxLayout" name="daq_layout">
+              <property name="spacing">
+               <number>6</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="daq_heading">
+                <property name="text">
+                 <string>DAQ</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="start_daq">
+                <property name="text">
+                 <string>Start Daq</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>start</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="stop_daq">
+                <property name="text">
+                 <string>Stop Daq</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>stop</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="start_interleave">
+                <property name="text">
+                 <string>Start Interleave</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>secondary</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="daq_spacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <property name="leftMargin">
+               <number>6</number>
+              </property>
+              <property name="rightMargin">
+               <number>6</number>
+              </property>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QFrame" name="visualization_panel">
+             <layout class="QVBoxLayout" name="visualization_layout">
+              <property name="spacing">
+               <number>6</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="visualization_heading">
+                <property name="text">
+                 <string>Visualization</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="mode_layout">
+                <item>
+                 <widget class="QLabel" name="mode_label">
+                  <property name="text">
+                   <string>Mode:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="visualization_mode">
+                  <property name="accessibleName">
+                   <string>Visualization mode</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QPushButton" name="start_grpc">
+                <property name="text">
+                 <string>Start Visual</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>start</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="stop_grpc">
+                <property name="text">
+                 <string>Stop Visual</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>stop</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="visualization_spacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <property name="leftMargin">
+               <number>6</number>
+              </property>
+              <property name="rightMargin">
+               <number>6</number>
+              </property>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QFrame" name="transfer_panel">
+             <layout class="QVBoxLayout" name="transfer_layout">
+              <property name="spacing">
+               <number>6</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="transfer_heading">
+                <property name="text">
+                 <string>Transfer</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="xfr_start">
+                <property name="text">
+                 <string>Start</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>start</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="xfr_stop">
+                <property name="text">
+                 <string>Stop</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>stop</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="xfr_status">
+                <property name="text">
+                 <string>Status</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>normal</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="xfr_monitor">
+                <property name="text">
+                 <string>Monitor</string>
+                </property>
+                <property name="role" stdset="0">
+                 <string>normal</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="transfer_spacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <property name="leftMargin">
+               <number>6</number>
+              </property>
+              <property name="rightMargin">
+               <number>6</number>
+              </property>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QFrame" name="logs_panel">
+          <layout class="QVBoxLayout" name="logs_layout">
+           <property name="spacing">
+            <number>8</number>
+           </property>
+           <item>
+            <layout class="QHBoxLayout" name="logs_header_layout">
+             <item>
+              <widget class="QLabel" name="logs_heading">
+               <property name="text">
+                <string>Logs</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="clear_logs">
+               <property name="text">
+                <string>Clear</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QTextEdit" name="console_output">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+             <property name="placeholderText">
+              <string>Command output will appear here.</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1475</width>
-     <height>30</height>
-    </rect>
-   </property>
    <widget class="QMenu" name="menuConfigs">
     <property name="title">
      <string>Configs</string>
     </property>
-    <addaction name="actiondata_config"/>
+    <addaction name="actiondata_config" />
    </widget>
-   <addaction name="menuConfigs"/>
+   <addaction name="menuConfigs" />
   </widget>
+  <widget class="QStatusBar" name="statusbar" />
   <action name="actiondata_config">
    <property name="text">
     <string>Data Config</string>
    </property>
   </action>
  </widget>
- <resources/>
- <connections/>
+ <customwidgets>
+  <customwidget>
+   <class>PowerSwitch</class>
+   <extends>QAbstractButton</extends>
+   <header>pseti_gui.dashboard_widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>ImageDashboardSplitter</class>
+   <extends>QSplitter</extends>
+   <header>pseti_gui.dashboard_widgets</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources />
+ <connections />
 </ui>
