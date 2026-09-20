@@ -37,6 +37,11 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self._power_command = None
         self._power_previous_checked = False
         self._power_previous_label = "Unknown"
+        # Follow-up `pseti` argv to run once the power command itself
+        # succeeds (redis daemons are started/stopped alongside power now
+        # that the standalone Redis On/Off buttons are gone) -- None means
+        # no follow-up is pending.
+        self._power_second_command = None
         # Qt's CSS support for `word-break` is unreliable, so force wrapping
         # natively rather than relying on ansi_html.py's inline style alone --
         # otherwise a long unbroken run (e.g. a padded table row) can still
@@ -203,8 +208,16 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self.append_log(text)
 
     def ps_finished(self, exitCode, exitStatus):
-        self._finish_power_command(exitStatus == QProcess.ExitStatus.NormalExit and exitCode == 0)
-        if exitStatus == QProcess.ExitStatus.NormalExit and exitCode == 0:
+        success = exitStatus == QProcess.ExitStatus.NormalExit and exitCode == 0
+        if success and self._power_second_command is not None:
+            second_command = self._power_second_command
+            self._power_second_command = None
+            self.append_log('---------------------------------------------------------------------------')
+            self.run_pseti(*second_command)
+            return
+        self._power_second_command = None
+        self._finish_power_command(success)
+        if success:
             self.append_log('---------------------------------------------------------------------------')
             return
         self.append_log("Command failed")
@@ -426,6 +439,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
         self._power_previous_checked = not checked
         self._power_previous_label = self.power_state_label.text()
         self._power_command = checked
+        self._power_second_command = ('cfg', 'redis-daemons') if checked else ('cfg', 'stop-redis-daemons')
         self.power_switch.setEnabled(False)
         self.power_state_label.setText('Pending…')
         self.run_pseti('power', 'on' if checked else 'off')
@@ -445,6 +459,7 @@ class MainWin(QMainWindow, Ui_MainWindow):
     def ps_error(self, error):
         if error == QProcess.ProcessError.FailedToStart:
             self.append_log(f'Cannot start command: {self.ps_process.errorString()}')
+            self._power_second_command = None
             self._finish_power_command(False)
 
     def start_interleave_clicked(self):

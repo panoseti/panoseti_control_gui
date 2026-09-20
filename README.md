@@ -101,10 +101,13 @@ The default 1640×900 window fits a 1920×1080 display;
 command panels use compact, content-aware widths instead of stretching. Visualization
 buttons are labeled Start Visual / Stop Visual.
 
-- **Power:** one switch runs the existing `pseti power on/off` commands. It is disabled
-  while the command runs and restored on failure. `ON*`/`OFF*` report the last successful
-  command, not measured hardware status; the initial status is Unknown.
-- **Initialization:** Validate, Health, Reboot, and GetUID. Redis controls have been removed.
+- **Power:** one switch runs `pseti power on`/`pseti power off`, then `pseti cfg
+  redis-daemons`/`pseti cfg stop-redis-daemons` — the standalone Redis On/Off buttons are
+  gone; starting/stopping the redis daemons now rides along with power. If the power
+  command itself fails, the redis step is skipped and the switch reverts. It is disabled
+  while either command runs and restored on failure. `ON*`/`OFF*` report the last
+  successful command, not measured hardware status; the initial status is Unknown.
+- **Initialization:** Validate, Health, Reboot, and GetUID.
 - **DAQ:** Start/Stop keep their existing commands. Start Interleave currently logs a
   placeholder message; its command will be connected later.
 - **Visualization:** choose PH1024, MOVIE16, or MOVIE8 before starting. The selection
